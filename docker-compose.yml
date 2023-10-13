@@ -1,0 +1,28 @@
+version: "3.7"
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_USER: "${DB_USER}"
+      POSTGRES_DB: "${DB_NAME}"
+    container_name: tz_bewise_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    env_file:
+      - .env-docker
+  app:
+    build:
+      context: .
+    env_file:
+      - .env-docker
+    container_name: tz_bewise
+    command: sh -c "alembic upgrade head && gunicorn src.main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind=0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+volumes:
+  db_data:
